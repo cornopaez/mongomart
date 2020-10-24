@@ -18,11 +18,11 @@
 var MongoClient = require('mongodb').MongoClient,
     assert = require('assert');
 
-
 function ItemDAO(database) {
     "use strict";
 
-    this.db = database;
+    // this.db = database.db('mongomart');
+    const db = database.db('mongomart');
 
     this.getCategories = function(callback) {
         "use strict";
@@ -62,19 +62,25 @@ function ItemDAO(database) {
         // ])
 
         function dbQuery () {
-
+                
             return new Promise(function(resolve, reject){
-                var categories = database.collection('item').aggregate([
-                    {$group:{
-                        _id: '$category',
-                        num: {$sum: 1}
-                    }},
-                    {$sort: {_id:1}}
-                ]).toArray();
+                try {
+                    var categories = db.collection('item').aggregate([
+                        {$group:{
+                            _id: '$category',
+                            num: {$sum: 1}
+                        }},
+                        {$sort: {_id:1}}
+                    ]).toArray();
 
-                resolve(categories)
-
+                    resolve(categories)
+                } catch(err) {
+                    console.log(err)
+                    reject(err)
+                }
             })
+                
+                
         }
 
         dbQuery()
@@ -138,7 +144,7 @@ function ItemDAO(database) {
 
                 var skipNum = page === 0 ? 0 : itemsPerPage * page
 
-                var results = database.collection('item')
+                var results = db.collection('item')
                                     .find(query)
                                     .sort({'_id':1})
                                     .skip(skipNum)
@@ -157,6 +163,9 @@ function ItemDAO(database) {
             .then(function(data){
                 callback(data)
             })
+            .catch(error => {
+             console.log(error)
+         })
 
         } else {
             var query = {
@@ -167,6 +176,9 @@ function ItemDAO(database) {
             .then(function(data){
                 callback(data)
             })
+            .catch(error => {
+             console.log(error)
+         })
         }         
 
         // var pageItem = this.createDummyItem();
@@ -194,9 +206,9 @@ function ItemDAO(database) {
                 var numItems = 0
 
                 if (category === 'All') {
-                    numItems = database.collection('item').find({}).count()
+                    numItems = db.collection('item').find({}).count()
                 } else {
-                    numItems = database.collection('item').find({'category':category}).count()
+                    numItems = db.collection('item').find({'category':category}).count()
                 }
 
                 resolve(numItems)
@@ -207,6 +219,9 @@ function ItemDAO(database) {
         .then(function(data){
             callback(data)
         })
+        .catch(error => {
+             console.log(error)
+         })
 
         /*
          * TODO-lab1C:
@@ -261,7 +276,7 @@ function ItemDAO(database) {
 
                 var skipNum = page === 0 ? 0 : itemsPerPage * page
 
-                var results = database.collection('item')
+                var results = db.collection('item')
                                         .find({$text:{$search: query}})
                                         .sort({_id: 1})
                                         .skip(skipNum)
@@ -275,6 +290,9 @@ function ItemDAO(database) {
          dbQuery()
          .then(function(data){
             callback(data)
+         })
+         .catch(error => {
+             console.log(error)
          })
 
         // var item = this.createDummyItem();
@@ -300,7 +318,7 @@ function ItemDAO(database) {
         function dbQuery(){
             return new Promise(function(resolve, reject){
 
-                var numItems = database.collection('item')
+                var numItems = db.collection('item')
                                         .find({$text:{$search:query}})
                                         .count()
 
@@ -311,6 +329,9 @@ function ItemDAO(database) {
          dbQuery()
          .then(function(data){
             callback(data)
+         })
+         .catch(error => {
+             console.log(error)
          })
 
         /*
@@ -350,7 +371,7 @@ function ItemDAO(database) {
                     _id : itemId
                 }
 
-                var item = database.collection('item')
+                var item = db.collection('item')
                                     .find(query)
                                     .next()
 
@@ -361,6 +382,9 @@ function ItemDAO(database) {
          dbQuery()
          .then(function(data){
             callback(data);
+         })
+         .catch(error => {
+             console.log(error)
          })
 
         // var item = this.createDummyItem();
@@ -377,7 +401,7 @@ function ItemDAO(database) {
     this.getRelatedItems = function(callback) {
         "use strict";
 
-        this.db.collection("item").find({})
+        db.collection("item").find({})
             .limit(4)
             .toArray(function(err, relatedItems) {
                 assert.equal(null, err);
@@ -415,7 +439,7 @@ function ItemDAO(database) {
 
         function dbInsert() {
             return new Promise(function(resolve, reject){
-                var doc = database.collection('item').updateOne(
+                var doc = db.collection('item').updateOne(
                     {_id: itemId},
                     {$push:
                         {reviews:reviewDoc}

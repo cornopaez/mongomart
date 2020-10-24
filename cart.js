@@ -22,8 +22,8 @@ var MongoClient = require('mongodb').MongoClient,
 function CartDAO(database) {
     "use strict";
 
-    this.db = database;
-
+    // this.db = database;
+    const db = database.db('mongomart');
 
     this.getCart = function(userId, callback) {
         "use strict";
@@ -47,7 +47,7 @@ function CartDAO(database) {
 
         function dbQuery() {
             return new Promise(function(resolve,reject){
-                var cart = database.collection('cart')
+                var cart = db.collection('cart')
                                         .find({userId:userId})
                                         .next()
                 resolve(cart)
@@ -58,6 +58,10 @@ function CartDAO(database) {
         .then(function(data){
             callback(data);
         })
+        .catch(error =>{
+             console.log('error in getCart')
+             console.log(error)
+         })
 
         // TODO-lab5 Replace all code above (in this method).
 
@@ -108,11 +112,11 @@ function CartDAO(database) {
                 }
 
                 var project= {
-                    'items.$_id': itemId, 
+                    'items._id': itemId, 
                     _id: 0
                 }
 
-                var inCart = database.collection('cart')
+                var inCart = db.collection('cart')
                                         .find(query, project)
                                         .next()
                 resolve(inCart)
@@ -122,6 +126,10 @@ function CartDAO(database) {
          dbQuery()
          .then(function(data){
             callback(data);
+         })
+         .catch(error =>{
+             console.log('error in itemInCart')
+             console.log(error)
          })
 
         // TODO-lab6 Replace all code above (in this method).
@@ -203,7 +211,7 @@ function CartDAO(database) {
         * LAB #7: Update the quantity of an item in the user's cart in the
         * database by setting quantity to the value passed in the quantity
         * parameter. If the value passed for quantity is 0, remove the item
-        * from the user's cart stored in the database.
+        * from the user's cart stored in the db.
         *
         * Pass the updated user's cart to the callback.
         *
@@ -214,9 +222,9 @@ function CartDAO(database) {
         *
         */
 
-        // database.collection('cart').update({'userId':'558098a65133816958968d88','items._id':13},{$set:{'items.$.quantity':5}})
+        // db.collection('cart').update({'userId':'558098a65133816958968d88','items._id':13},{$set:{'items.$.quantity':5}})
         if (quantity === 0){
-            database.collection('cart').findOneAndUpdate(
+            db.collection('cart').findOneAndUpdate(
                 {'userId':userId},
                 {$pull:{items:{_id:itemId}}},
                 function(err, result) {
@@ -225,7 +233,7 @@ function CartDAO(database) {
                 }
             )
         } else {
-            database.collection('cart').findOneAndUpdate(
+            db.collection('cart').findOneAndUpdate(
                 {'userId':userId,'items._id':itemId},
                 {'$set':{'items.$.quantity':quantity}},
                 function(err, result) {

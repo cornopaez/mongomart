@@ -22,7 +22,7 @@ var express = require('express'),
     assert = require('assert'),
     ItemDAO = require('./items').ItemDAO,
     CartDAO = require('./cart').CartDAO;
-    
+    dotenv = require('dotenv').config()
 
 // Set up express
 app = express();
@@ -51,9 +51,10 @@ var ITEMS_PER_PAGE = 5;
 // Hardcoded USERID for use with the shopping cart portion
 var USERID = "558098a65133816958968d88";
 
-var devMongoUri = 'mongodb://testDummy:paezTest007@localhost:27017/mongomart'
+const devMongoUri = ''
+const options = { useUnifiedTopology: true }
 
-MongoClient.connect(process.env.MONGODB_URI? process.env.MONGODB_URI : devMongoUri, function(err, db) {
+MongoClient.connect(process.env.MONGODB_URI? process.env.MONGODB_URI : process.env.MONGODB_LOCAL, options, function(err, db) {
     "use strict";
 
     assert.equal(null, err);
